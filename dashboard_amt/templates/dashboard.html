@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Industrial AMT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loader-content">
+    <div class="loader-logo">
+      <img src="{{ url_for('static', filename='img/amt.svg') }}" onerror="this.style.display='none'" alt="Logo" />
+    </div>
+    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+    <div class="loader-text">Carregando Dashboard Industrial...</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo-only">
+      <img src="{{ url_for('static', filename='img/amt.svg') }}" onerror="this.style.display='none'" alt="Logo AMT" class="sidebar-logo-full" />
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">MONITORAMENTO</div>
+    <a href="#section-cards" class="nav-item active" data-section="cards">
+      <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+      <span class="nav-label">Indicadores</span>
+    </a>
+    <a href="#section-graficos" class="nav-item" data-section="graficos">
+      <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+      <span class="nav-label">Gráficos</span>
+    </a>
+    <a href="#section-tabelas" class="nav-item" data-section="tabelas">
+      <span class="nav-icon"><i class="fa-solid fa-table-list"></i></span>
+      <span class="nav-label">Tabelas</span>
+    </a>
+
+    <div class="nav-group-label">ANÁLISE</div>
+    <a href="#section-producao" class="nav-item" data-section="producao">
+      <span class="nav-icon"><i class="fa-solid fa-boxes-stacked"></i></span>
+      <span class="nav-label">Produção</span>
+    </a>
+    <a href="#section-operadores" class="nav-item" data-section="operadores">
+      <span class="nav-icon"><i class="fa-solid fa-users-gear"></i></span>
+      <span class="nav-label">Operadores</span>
+    </a>
+    <a href="#section-maquinas" class="nav-item" data-section="maquinas">
+      <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+      <span class="nav-label">Máquinas</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-status">
+      <span class="status-dot" id="sb-status-dot"></span>
+      <span id="sb-status-text">Conectando...</span>
+    </div>
+    <div class="sidebar-version">v1.0.0 © AMT 2026</div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main-wrap">
+
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+      <div class="topbar-title">
+        <div>
+          <div class="topbar-name">Dashboard Industrial AMT</div>
+          <div class="topbar-sub">Análise e Controle de Produção</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="db-status-pill" id="db-status-pill">
+        <span class="pulse-dot" id="pulse-dot"></span>
+        <span id="db-status-label">Verificando BD...</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="clock-block">
+        <div class="clock-time" id="clock-time">--:--:--</div>
+        <div class="clock-date" id="clock-date">---</div>
+      </div>
+      <button class="btn-icon" id="btnRefresh" title="Atualizar Dados">
+        <i class="fa-solid fa-rotate"></i>
+      </button>
+      <button class="btn-icon btn-export" id="btnExport" title="Exportar Relatório">
+        <i class="fa-solid fa-file-arrow-down"></i>
+        <span>Exportar</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- PAGE BODY -->
+  <div class="page-body">
+
+    <!-- FILTERS -->
+    <section class="filter-bar" id="filter-bar">
+      <div class="filter-bar-header">
+        <span><i class="fa-solid fa-sliders"></i> Filtros</span>
+        <button class="btn-filter-clear" id="btnClearFilters">
+          <i class="fa-solid fa-xmark"></i> Limpar
+        </button>
+      </div>
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label>Data Inicial</label>
+          <input type="date" id="f-dt-ini" class="filter-input" />
+        </div>
+        <div class="filter-group">
+          <label>Data Final</label>
+          <input type="date" id="f-dt-fim" class="filter-input" />
+        </div>
+        <div class="filter-group">
+          <label>Turno</label>
+          <select id="f-turno" class="filter-input">
+            <option value="todos">Todos</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Máquina</label>
+          <select id="f-maquina" class="filter-input">
+            <option value="todos">Todas</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Operador</label>
+          <select id="f-operador" class="filter-input">
+            <option value="todos">Todos</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Produto</label>
+          <select id="f-produto" class="filter-input">
+            <option value="todos">Todos</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Processo</label>
+          <select id="f-processo" class="filter-input">
+            <option value="todos">Todos</option>
+          </select>
+        </div>
+        <div class="filter-group filter-action">
+          <button class="btn-apply" id="btnApply">
+            <i class="fa-solid fa-magnifying-glass"></i> Aplicar
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARDS -->
+    <section id="section-cards" class="section-block">
+      <div class="section-header">
+        <h2><i class="fa-solid fa-gauge-high"></i> Indicadores de Produção</h2>
+        <span class="last-update" id="last-update">Última atualização: --</span>
+      </div>
+      <div class="cards-grid">
+
+        <div class="card card-blue card-anim" style="--delay:.05s">
+          <div class="card-icon"><i class="fa-solid fa-cubes"></i></div>
+          <div class="card-body">
+            <div class="card-label">Produção Total</div>
+            <div class="card-value" id="c-total">0</div>
+            <div class="card-sub">peças produzidas</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-cubes"></i></div>
+        </div>
+
+        <div class="card card-green card-anim" style="--delay:.10s">
+          <div class="card-icon"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="card-body">
+            <div class="card-label">Peças Boas</div>
+            <div class="card-value" id="c-boas">0</div>
+            <div class="card-sub">aprovadas no processo</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-circle-check"></i></div>
+        </div>
+
+        <div class="card card-red card-anim" style="--delay:.15s">
+          <div class="card-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="card-body">
+            <div class="card-label">Perdas</div>
+            <div class="card-value" id="c-perdas">0</div>
+            <div class="card-sub">peças com defeito</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        </div>
+
+        <div class="card card-yellow card-anim" style="--delay:.20s">
+          <div class="card-icon"><i class="fa-solid fa-percent"></i></div>
+          <div class="card-body">
+            <div class="card-label">% Perda</div>
+            <div class="card-value" id="c-pct-perda">0%</div>
+            <div class="card-sub">índice de refugo</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-percent"></i></div>
+        </div>
+
+        <div class="card card-teal card-anim" style="--delay:.25s">
+          <div class="card-icon"><i class="fa-solid fa-clock"></i></div>
+          <div class="card-body">
+            <div class="card-label">Tempo Produzindo</div>
+            <div class="card-value" id="c-tp">0h</div>
+            <div class="card-sub">horas em operação</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-clock"></i></div>
+        </div>
+
+        <div class="card card-orange card-anim" style="--delay:.30s">
+          <div class="card-icon"><i class="fa-solid fa-pause-circle"></i></div>
+          <div class="card-body">
+            <div class="card-label">Tempo Parado</div>
+            <div class="card-value" id="c-tpar">0h</div>
+            <div class="card-sub">horas sem produção</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-pause-circle"></i></div>
+        </div>
+
+        <div class="card card-blue2 card-anim" style="--delay:.35s">
+          <div class="card-icon"><i class="fa-solid fa-chart-simple"></i></div>
+          <div class="card-body">
+            <div class="card-label">Eficiência</div>
+            <div class="card-value" id="c-ef">0%</div>
+            <div class="card-sub">OEE simplificado</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-chart-simple"></i></div>
+          <div class="card-bar-wrap"><div class="card-bar" id="bar-ef"></div></div>
+        </div>
+
+        <div class="card card-purple card-anim" style="--delay:.40s">
+          <div class="card-icon"><i class="fa-solid fa-bullseye"></i></div>
+          <div class="card-body">
+            <div class="card-label">Meta</div>
+            <div class="card-value" id="c-meta">0</div>
+            <div class="card-sub">peças programadas</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-bullseye"></i></div>
+        </div>
+
+        <div class="card card-indigo card-anim" style="--delay:.45s">
+          <div class="card-icon"><i class="fa-solid fa-gear"></i></div>
+          <div class="card-body">
+            <div class="card-label">Máquinas Ativas</div>
+            <div class="card-value" id="c-maq">0</div>
+            <div class="card-sub">em operação hoje</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-gear"></i></div>
+        </div>
+
+        <div class="card card-cyan card-anim" style="--delay:.50s">
+          <div class="card-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+          <div class="card-body">
+            <div class="card-label">Apontamentos Hoje</div>
+            <div class="card-value" id="c-apto">0</div>
+            <div class="card-sub">registros do dia</div>
+          </div>
+          <div class="card-bg-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CHARTS SECTION -->
+    <section id="section-graficos" class="section-block">
+      <div class="section-header">
+        <h2><i class="fa-solid fa-chart-line"></i> Gráficos de Produção</h2>
+      </div>
+
+      <div class="charts-grid-2">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-gear"></i> Produção por Máquina</span>
+          </div>
+          <div class="chart-wrap"><canvas id="chartMaquina"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-moon"></i> Produção por Turno</span>
+          </div>
+          <div class="chart-wrap"><canvas id="chartTurno"></canvas></div>
+        </div>
+      </div>
+
+      <div class="charts-grid-2">
+        <div class="chart-card chart-tall">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-calendar-days"></i> Evolução Diária da Produção</span>
+          </div>
+          <div class="chart-wrap"><canvas id="chartEvolucao"></canvas></div>
+        </div>
+        <div class="chart-card chart-tall">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-user-gear"></i> Produção por Operador</span>
+          </div>
+          <div class="chart-wrap"><canvas id="chartOperador"></canvas></div>
+        </div>
+      </div>
+
+      <div class="charts-grid-3">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-box-open"></i> Top 10 Produtos</span>
+          </div>
+          <div class="chart-wrap"><canvas id="chartProdutos"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-hourglass-half"></i> Tempo Parado x Produzindo</span>
+          </div>
+          <div class="chart-wrap"><canvas id="chartTempo"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-bullseye"></i> Meta x Realizado</span>
+          </div>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="chartMeta"></canvas></div>
+        </div>
+      </div>
+
+      <div class="charts-grid-2">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-star"></i> Ranking de Operadores — Eficiência</span>
+          </div>
+          <div class="chart-wrap"><canvas id="chartRankingOp"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span><i class="fa-solid fa-trophy"></i> Ranking de Máquinas — Produção</span>
+          </div>
+          <div class="chart-wrap"><canvas id="chartRankingMaq"></canvas></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TABLES -->
+    <section id="section-tabelas" class="section-block">
+      <div class="section-header">
+        <h2><i class="fa-solid fa-table-list"></i> Tabelas Detalhadas</h2>
+      </div>
+
+      <div class="tables-grid-2">
+        <div class="table-card" id="section-operadores">
+          <div class="table-card-header">
+            <span><i class="fa-solid fa-users-gear"></i> Operadores Mais Produtivos</span>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table" id="tbl-operadores">
+              <thead><tr><th>#</th><th>Operador</th><th>Produção</th><th>Perdas</th><th>Eficiência</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="table-card" id="section-maquinas">
+          <div class="table-card-header">
+            <span><i class="fa-solid fa-triangle-exclamation"></i> Máquinas com Maior Perda</span>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table" id="tbl-maq-perda">
+              <thead><tr><th>#</th><th>Máquina</th><th>Total</th><th>Perdas</th><th>% Perda</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tables-grid-2">
+        <div class="table-card">
+          <div class="table-card-header">
+            <span><i class="fa-solid fa-box-open"></i> Produtos Mais Fabricados</span>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table" id="tbl-produtos">
+              <thead><tr><th>#</th><th>Produto</th><th>Total</th><th>Perdas</th><th>Apontamentos</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-card-header">
+            <span><i class="fa-solid fa-clock-rotate-left"></i> Últimos Apontamentos</span>
+            <span class="tbl-badge" id="badge-ultimos">0</span>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table" id="tbl-ultimos">
+              <thead><tr><th>Data</th><th>Turno</th><th>Máquina</th><th>Produto</th><th>Operador</th><th>Qtd</th><th>Perda</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-body -->
+</div><!-- /main-wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
